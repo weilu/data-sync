@@ -74,7 +74,7 @@ for filename, size in all_files:
         continue
 
     # only process files smaller than 20GB
-    if size > 20 * 1000 * 1000 * 1000:
+    if size > 21 * 1000 * 1000 * 1000:
         logging.info(f'Skipping {filename} due to large size {size}')
         continue
 
@@ -98,7 +98,7 @@ for filename, size in all_files:
 
         for to_upload_filename in files:
             local_path = os.path.join(root, to_upload_filename)
-            dropbox_path = '/' + os.path.relpath(local_path, relpath_start)
+            dropbox_path = '/data_sync-' + os.path.relpath(local_path, relpath_start)
 
             if exist_on_dropbox(dbx, dropbox_path):
                 logging.info(f'Skipping {local_path} as it exists on dropbox')
