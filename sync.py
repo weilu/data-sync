@@ -64,6 +64,9 @@ dbx = dropbox.Dropbox(DROPBOX_TOKEN, timeout=900)
 s3 = boto3.client('s3')
 response = s3.list_objects_v2(Bucket='weipublic')
 all_files = [(c['Key'], c['Size']) for c in response['Contents']]
+
+MAX_FILE_SIZE_GB = os.environ.get('MAX_FILE_SIZE_GB')
+
 for filename, size in all_files:
     if not filename.endswith('.tar'):
         continue
@@ -73,10 +76,11 @@ for filename, size in all_files:
         logging.info(f'Skipping done {filename}')
         continue
 
-    # only process files smaller than 20GB
-    if size > 21 * 1000 * 1000 * 1000:
-        logging.info(f'Skipping {filename} due to large size {size}')
-        continue
+    # only process files smaller than MAX_FILE_SIZE_GB
+    if MAX_FILE_SIZE_GB:
+        if size > float(MAX_FILE_SIZE_GB) * 1000 * 1000 * 1000:
+            logging.info(f'Skipping {filename} due to large size {size}')
+            continue
 
     if not os.path.exists(filename):
         logging.info(f'Downloading {filename} from s3')
