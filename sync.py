@@ -101,6 +101,9 @@ for filename, size in all_files:
                 print(f'dropbox_top_dir: {dropbox_top_dir}, relpath_start: {relpath_start}')
 
         for to_upload_filename in files:
+            if to_upload_filename.endswith('.dropbox'):
+                print(f'skipping .dropbox file: {to_upload_filename}')
+                continue
             local_path = os.path.join(root, to_upload_filename)
             dropbox_path = '/data_sync-' + os.path.relpath(local_path, relpath_start)
 
