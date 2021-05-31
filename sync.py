@@ -94,8 +94,13 @@ for filename, size in all_files:
     dropbox_top_dir = None
     for root, dirs, files in os.walk('tosync'):
         if not dropbox_top_dir: # only set it once using the first value discovered
+            # special handling for textlab_data_db_exports.tar
+            if root == 'tosync/data' and len(dirs) == 1 and dirs[0] == 'db_exports':
+                rel_depth = '../..'
+            else:
+                rel_depth = '../../..'
             relpath_to_root = os.path.relpath(dirs[0], root)
-            if '../../..' in relpath_to_root:
+            if rel_depth in relpath_to_root:
                 dropbox_top_dir = dirs[0]
                 relpath_start = root.replace(dropbox_top_dir, '')
                 print(f'dropbox_top_dir: {dropbox_top_dir}, relpath_start: {relpath_start}')
@@ -116,4 +121,5 @@ for filename, size in all_files:
     shutil.rmtree('tosync')
     os.remove(filename)
     Path(done_file_path).touch()
+    logging.info(f'Done unpacking {filename} to /data_sync-{dropbox_top_dir}')
 
