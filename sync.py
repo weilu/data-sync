@@ -6,6 +6,7 @@ import logging
 import shutil
 from pathlib import Path
 from tqdm import tqdm
+from dropbox.exceptions import ApiError
 
 
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',
@@ -106,8 +107,9 @@ for filename, size in all_files:
                 print(f'dropbox_top_dir: {dropbox_top_dir}, relpath_start: {relpath_start}')
 
         for to_upload_filename in files:
-            if to_upload_filename.endswith('.dropbox'):
-                print(f'skipping .dropbox file: {to_upload_filename}')
+            filename_lower = to_upload_filename.lower()
+            if filename_lower.endswith('.dropbox') or filename_lower.endswith('.ds_store'):
+                print(f'skipping disallowed file: {to_upload_filename}')
                 continue
             local_path = os.path.join(root, to_upload_filename)
             dropbox_path = '/data_sync-' + os.path.relpath(local_path, relpath_start)
@@ -116,7 +118,13 @@ for filename, size in all_files:
                 logging.info(f'Skipping {local_path} as it exists on dropbox')
             else:
                 logging.info(f'Uploading from local: {local_path} to dropbox: {dropbox_path}')
-                upload(dbx, local_path, dropbox_path)
+                try:
+                    upload(dbx, local_path, dropbox_path)
+                except ApiError as e:
+                    import traceback
+                    traceback.print_exc()
+                    continue
+
 
     shutil.rmtree('tosync')
     os.remove(filename)
