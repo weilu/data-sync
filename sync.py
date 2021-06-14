@@ -6,7 +6,9 @@ import logging
 import shutil
 from pathlib import Path
 from tqdm import tqdm
-from dropbox.exceptions import ApiError
+from dropbox.exceptions import ApiError, InternalServerError
+import traceback
+from time import sleep
 
 
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',
@@ -58,6 +60,27 @@ def exist_on_dropbox(dbx, dropbox_path):
         return True
     except:
         return False
+
+
+def upload_with_retry(dbx, local_path, dropbox_path, retried=0):
+    if retried:
+        sleep_seconds = 10**retried
+        logging.warning(f'uploading of {dropbox_path} failed. At retry #{retry}. Will sleep for {sleep_seconds} before retry')
+        sleep(sleep_seconds)
+
+    try:
+        upload(dbx, local_path, dropbox_path)
+    except ApiError as e:
+        traceback.print_exc()
+        logging.warning(f'uploading of {dropbox_path} failed due to ApiError. Skipping...')
+    except InternalServerError as e:
+        traceback.print_exc()
+        if retried >= 4:
+            logging.warning(f'uploading of {dropbox_path} failed after {retry} retries. Existing...')
+            raise e
+        else:
+            return upload_with_retry(dbx, local_path, dropbox_path, retried+1)
+
 
 DROPBOX_TOKEN = os.environ.get('DROPBOX_TOKEN')
 dbx = dropbox.Dropbox(DROPBOX_TOKEN, timeout=900)
@@ -118,12 +141,7 @@ for filename, size in all_files:
                 logging.info(f'Skipping {local_path} as it exists on dropbox')
             else:
                 logging.info(f'Uploading from local: {local_path} to dropbox: {dropbox_path}')
-                try:
-                    upload(dbx, local_path, dropbox_path)
-                except ApiError as e:
-                    import traceback
-                    traceback.print_exc()
-                    continue
+                upload_with_retry(dbx, local_path, dropbox_path)
 
 
     shutil.rmtree('tosync')
