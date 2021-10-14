@@ -135,6 +135,10 @@ for filename, size in all_files:
                 print(f'skipping disallowed file: {to_upload_filename}')
                 continue
             local_path = os.path.join(root, to_upload_filename)
+            if not os.path.isfile(local_path):
+                print(f'skipping non-file: {local_path}')
+                continue
+
             dropbox_path = '/data_sync-' + os.path.relpath(local_path, relpath_start)
 
             if exist_on_dropbox(dbx, dropbox_path):
