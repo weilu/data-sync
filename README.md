@@ -19,5 +19,5 @@ cd data-sync
 docker build -t data-sync .
 
 # Use -e MAX_FILE_SIZE_GB to process only files smaller than the specified size – useful when disk space is limited
-docker run -e AWS_ACCESS_KEY_ID=[] -e AWS_SECRET_ACCESS_KEY=[] DROPBOX_TOKEN=[] data-sync:latest
+docker run -e S3_BUCKET_NAME=[] -e AWS_ACCESS_KEY_ID=[] -e AWS_SECRET_ACCESS_KEY=[] DROPBOX_TOKEN=[] data-sync:latest
 ```
