@@ -82,11 +82,12 @@ def upload_with_retry(dbx, local_path, dropbox_path, retried=0):
             return upload_with_retry(dbx, local_path, dropbox_path, retried+1)
 
 
+S3_BUCKET_NAME= os.environ.get('S3_BUCKET_NAME')
 DROPBOX_TOKEN = os.environ.get('DROPBOX_TOKEN')
 dbx = dropbox.Dropbox(DROPBOX_TOKEN, timeout=900)
 
 s3 = boto3.client('s3')
-response = s3.list_objects_v2(Bucket='weipublic')
+response = s3.list_objects_v2(Bucket=S3_BUCKET_NAME)
 all_files = [(c['Key'], c['Size']) for c in response['Contents']]
 
 MAX_FILE_SIZE_GB = os.environ.get('MAX_FILE_SIZE_GB')
@@ -108,7 +109,7 @@ for filename, size in all_files:
 
     if not os.path.exists(filename):
         logging.info(f'Downloading {filename} from s3')
-        s3.download_file('weipublic', filename, filename)
+        s3.download_file(S3_BUCKET_NAME, filename, filename)
 
     if not os.path.exists('tosync'):
         tar = TarFile(filename)
